@@ -1,17 +1,14 @@
-use clap::Parser;
-use std::{
-    fmt,
-    path::PathBuf,
-};
 use anyhow::{Context, Result};
+use clap::Parser;
+use std::{fmt, path::PathBuf};
 mod error;
 pub use error::Error;
 mod scanner;
 pub use scanner::Scanner;
 mod token;
-pub use token::Token;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+pub use token::{Token, TokenType};
 
 pub struct Repl {
     history_path: String,
@@ -34,10 +31,7 @@ impl Repl {
 #[derive(Parser)]
 #[clap(about = "A runtime for mysterious bytes...")]
 struct Args {
-    #[clap(
-        parse(from_os_str),
-        help = "Path to Seid file"
-    )]
+    #[clap(parse(from_os_str), help = "Path to Seid file")]
     file_name: PathBuf,
     #[clap(
         short,
@@ -54,32 +48,31 @@ impl fmt::Display for Args {
     }
 }
 
-fn main() -> Result<(), anyhow::Error>{
+fn main() -> Result<(), anyhow::Error> {
     let args = Args::parse();
-    
+
     Ok(())
 }
 
 struct Seid {
-    file_name:  PathBuf,
-    repl:       Repl,
-    had_error:  bool,
+    file_name: PathBuf,
+    repl: Repl,
+    had_error: bool,
     use_prompt: bool,
 }
 
-impl Seid{
+impl Seid {
     fn new(arg: &Args) -> Self {
         let mut run_prompt: bool = false;
         let mut file_name = PathBuf::from("");
         if std::env::args().len() < 2 {
             run_prompt = true;
-        }
-        else {
+        } else {
             file_name = arg.file_name;
         }
         Seid {
             file_name: file_name,
-            repl:  Repl::new(),
+            repl: Repl::new(),
             had_error: false,
             use_prompt: run_prompt,
         }
@@ -88,13 +81,12 @@ impl Seid{
     fn start(&self) -> Result<(), Error> {
         if self.use_prompt {
             match self.run_prompt() {
-                Ok(()) => {},
+                Ok(()) => {}
                 Err(e) => self.handle_error(e),
             };
-        }
-        else {
+        } else {
             match self.run_file() {
-                Ok(()) => {},
+                Ok(()) => {}
                 Err(e) => self.handle_error(e),
             }
         }
@@ -105,17 +97,17 @@ impl Seid{
         match e {
             Error::InputError(s) => {
                 eprintln!("{:?}", e)
-            },
+            }
             Error::Repl(s) => {
                 eprintln!("{:?}", e)
-            },
+            }
             Error::SyntaxError(s1, s2, s3) => {
                 eprintln!("{:?}", e);
                 self.had_error = true;
             }
             Error::Anyhow(s) => {
                 eprintln!("{:?}", e)
-            },
+            }
         }
     }
 
@@ -130,9 +122,7 @@ impl Seid{
                     // User pressed ctrl+d. Ignore it
                     println!("Type \"exit()\" to exit");
                 }
-                Err(err) => {
-                    return Err(Error::Repl(err.to_string()))
-                }
+                Err(err) => return Err(Error::Repl(err.to_string())),
                 Ok(line) => {
                     if line.eq("exit()") {
                         return Ok(());
@@ -140,22 +130,23 @@ impl Seid{
                     self.run(&line)?;
                 }
             }
-        } 
+        }
     }
 
     fn run_file(&self) -> Result<(), Error> {
-        let contents = std::fs::read_to_string(self.file_name)
-            .with_context(|| format!("could not read file `{}`", self.file_name.to_str().unwrap()))?;
-        self.run(&contents)?;
+        let contents = std::fs::read_to_string(self.file_name).with_context(|| {
+            format!("could not read file `{}`", self.file_name.to_str().unwrap())
+        })?;
+        self.run(contents)?;
         Ok(())
     }
 
-    fn run(&self, source: &str) -> Result<(), Error> {
+    fn run(&self, source: String) -> Result<(), Error> {
         let mut scanner: Scanner = Scanner::new(source);
-        let tokens:  Vec<Token> = scanner.scan_tokens()?;
+        let tokens: Vec<Token> = scanner.scan_tokens()?;
 
         for token in tokens {
-            println!("{:?}", token);
+            println!("{}", token.to_string());
         }
         Ok(())
     }
