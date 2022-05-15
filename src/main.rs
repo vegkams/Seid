@@ -8,7 +8,7 @@ pub use scanner::Scanner;
 mod token;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-pub use token::{Token, TokenType};
+pub use token::{Literal, Token, TokenType};
 
 pub struct Repl {
     history_path: String,
@@ -37,7 +37,7 @@ struct Args {
         short,
         long,
         help = "Arguments to the input file",
-        default_value = vec![]
+        default_value = ""
     )]
     prog_args: Vec<String>,
 }
@@ -68,7 +68,7 @@ impl Seid {
         if std::env::args().len() < 2 {
             run_prompt = true;
         } else {
-            file_name = arg.file_name;
+            file_name = arg.file_name.clone();
         }
         Seid {
             file_name: file_name,
@@ -78,7 +78,7 @@ impl Seid {
         }
     }
 
-    fn start(&self) -> Result<(), Error> {
+    fn start(&mut self) -> Result<(), Error> {
         if self.use_prompt {
             match self.run_prompt() {
                 Ok(()) => {}
@@ -93,25 +93,25 @@ impl Seid {
         Ok(())
     }
 
-    fn handle_error(&self, e: Error) {
+    fn handle_error(&mut self, e: Error) {
         match e {
-            Error::InputError(s) => {
+            Error::InputError(_) => {
                 eprintln!("{:?}", e)
             }
-            Error::Repl(s) => {
+            Error::Repl(_) => {
                 eprintln!("{:?}", e)
             }
-            Error::SyntaxError(s1, s2, s3) => {
+            Error::SyntaxError(_, _, _) => {
                 eprintln!("{:?}", e);
                 self.had_error = true;
             }
-            Error::Anyhow(s) => {
+            Error::Anyhow(_) => {
                 eprintln!("{:?}", e)
             }
         }
     }
 
-    fn run_prompt(&self) -> Result<(), Error> {
+    fn run_prompt(&mut self) -> Result<(), Error> {
         loop {
             match self.repl.readline.readline("(seid) > ") {
                 Err(ReadlineError::Interrupted) => {
@@ -127,14 +127,14 @@ impl Seid {
                     if line.eq("exit()") {
                         return Ok(());
                     }
-                    self.run(&line)?;
+                    self.run(line)?;
                 }
             }
         }
     }
 
     fn run_file(&self) -> Result<(), Error> {
-        let contents = std::fs::read_to_string(self.file_name).with_context(|| {
+        let contents = std::fs::read_to_string(&self.file_name).with_context(|| {
             format!("could not read file `{}`", self.file_name.to_str().unwrap())
         })?;
         self.run(contents)?;
@@ -143,7 +143,7 @@ impl Seid {
 
     fn run(&self, source: String) -> Result<(), Error> {
         let mut scanner: Scanner = Scanner::new(source);
-        let tokens: Vec<Token> = scanner.scan_tokens()?;
+        let tokens: &Vec<Token> = scanner.scan_tokens()?;
 
         for token in tokens {
             println!("{}", token.to_string());

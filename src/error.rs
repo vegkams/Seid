@@ -6,7 +6,7 @@ pub enum Error {
     InputError(String),
     #[error("REPL: {0}")]
     Repl(String),
-    #[error("[line {0}] Error{1}: {2}")]
+    #[error("[line {0}] Error {1}: {2}")]
     SyntaxError(String, String, String),
     #[error("Anyhow: {0}")]
     Anyhow(String),
