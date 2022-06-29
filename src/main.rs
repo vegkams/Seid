@@ -16,7 +16,7 @@ pub struct Repl {
 }
 
 impl Repl {
-    pub fn new() -> Repl {
+    pub fn new() -> Self {
         let history_path = format!("{}/.seid_history", std::env::var("HOME").unwrap());
         let mut readline = Editor::<()>::new();
         // Attempt to read history if it exists
@@ -31,14 +31,9 @@ impl Repl {
 #[derive(Parser)]
 #[clap(about = "A runtime for mysterious bytes...")]
 struct Args {
-    #[clap(parse(from_os_str), help = "Path to Seid file")]
+    #[clap(parse(from_os_str), help = "Path to Seid file", default_value = "")]
     file_name: PathBuf,
-    #[clap(
-        short,
-        long,
-        help = "Arguments to the input file",
-        default_value = ""
-    )]
+    #[clap(short, long, help = "Arguments to the input file", default_value = "")]
     prog_args: Vec<String>,
 }
 
@@ -50,6 +45,8 @@ impl fmt::Display for Args {
 
 fn main() -> Result<(), anyhow::Error> {
     let args = Args::parse();
+    let mut seid = Seid::new(&args);
+    seid.start()?;
 
     Ok(())
 }
@@ -127,7 +124,10 @@ impl Seid {
                     if line.eq("exit()") {
                         return Ok(());
                     }
-                    self.run(line)?;
+                    match self.run(line) {
+                        Ok(()) => (),
+                        Err(e) => self.handle_error(e),
+                    };
                 }
             }
         }

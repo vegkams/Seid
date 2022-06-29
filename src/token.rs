@@ -35,7 +35,7 @@ impl Token {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum TokenType {
     //Single-character tokens.
     LeftParen,
@@ -82,6 +82,7 @@ pub enum TokenType {
     True,
     Var,
     While,
+    Lambda,
 
     Eof,
 }
