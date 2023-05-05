@@ -114,7 +114,7 @@ impl Scanner {
                     self.add_token(TokenType::Slash)
                 }
             }
-            ' ' | '\r' | 't' => {}
+            ' ' | '\r' | '\t' => {}
             '\n' => self.line += 1,
             '"' => self.string()?,
             _ => {
