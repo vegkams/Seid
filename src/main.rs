@@ -3,12 +3,11 @@ use clap::Parser;
 use std::{fmt, path::PathBuf};
 mod error;
 pub use error::Error;
-mod scanner;
-pub use scanner::Scanner;
-mod token;
+pub mod scanner;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-pub use token::{Literal, Token, TokenType};
+pub use scanner::Scanner;
+pub use scanner::{Literal, Token, TokenType};
 
 pub struct Repl {
     history_path: String,
