@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::Token;
+use std::fmt;
 /*
 Expression grammar:
 
@@ -12,24 +12,23 @@ unary          → ( "-" | "!" ) unary | primary ;
 primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
 */
 
-pub enum Expr { 
+pub enum Expr<'a> {
     Literal(LiteralOp),
-    Unary(Token, Box<Expr>),
-    Binary(Box<Expr>, Token, Box<Expr>),
-    Grouping(Box<Expr>),
+    Unary(&'a Token, Box<Expr<'a>>),
+    Binary(Box<Expr<'a>>, &'a Token, Box<Expr<'a>>),
+    Grouping(Box<Expr<'a>>),
 }
 
-impl fmt::Display for Expr {
+impl fmt::Display for Expr<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Expr::Literal(op) => write!(f, "{}", &op.op_type),
-            Expr::Unary(t, exp) =>  {
+            Expr::Literal(op) => write!(f, "{}", &op),
+            Expr::Unary(t, exp) => {
                 if let Ok(s) = std::str::from_utf8(&t.lexeme) {
                     return write!(f, "( {} {})", s, &*exp);
                 } else {
                     return Err(fmt::Error);
                 }
-                
             }
             Expr::Binary(exp_lhs, t, exp_rhs) => {
                 if let Ok(s) = std::str::from_utf8(&t.lexeme) {
@@ -43,8 +42,7 @@ impl fmt::Display for Expr {
     }
 }
 
-
-pub enum LiteralOpType {
+pub enum LiteralOp {
     Number(f64),
     Str(String),
     True,
@@ -52,20 +50,14 @@ pub enum LiteralOpType {
     Nil,
 }
 
-
-impl fmt::Display for LiteralOpType {
+impl fmt::Display for LiteralOp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            LiteralOpType::Number(n) => write!(f, "{}", n),
-            LiteralOpType::Str(s)    => write!(f, "{}", s),
-            LiteralOpType::True      => write!(f, "True"),
-            LiteralOpType::False     => write!(f, "False"),
-            LiteralOpType::Nil       => write!(f, "Nil"),
+            LiteralOp::Number(n) => write!(f, "{}", n),
+            LiteralOp::Str(s) => write!(f, "{}", s),
+            LiteralOp::True => write!(f, "True"),
+            LiteralOp::False => write!(f, "False"),
+            LiteralOp::Nil => write!(f, "Nil"),
         }
     }
 }
-
-pub struct LiteralOp {
-    pub op_type: LiteralOpType,
-}
-

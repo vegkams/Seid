@@ -3,6 +3,7 @@ use clap::Parser;
 use std::{fmt, path::PathBuf};
 mod error;
 pub use error::Error;
+pub mod parser;
 pub mod scanner;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
@@ -92,17 +93,20 @@ impl Seid {
     fn handle_error(&mut self, e: Error) {
         match e {
             Error::InputError(_) => {
-                eprintln!("{:?}", e)
+                eprintln!("{e:?}")
             }
             Error::Repl(_) => {
-                eprintln!("{:?}", e)
+                eprintln!("{e:?}")
             }
             Error::SyntaxError(_, _, _) => {
-                eprintln!("{:?}", e);
+                eprintln!("{e:?}");
                 self.had_error = true;
             }
             Error::Anyhow(_) => {
-                eprintln!("{:?}", e)
+                eprintln!("{e:?}")
+            }
+            Error::ParsingError(_) => {
+                eprintln!("{e:?}")
             }
         }
     }

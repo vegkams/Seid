@@ -8,6 +8,8 @@ pub enum Error {
     Repl(String),
     #[error("[line {0}] Error {1}: {2}")]
     SyntaxError(String, String, String),
+    #[error("Parsing error: {0}")]
+    ParsingError(String),
     #[error("Anyhow: {0}")]
     Anyhow(String),
 }
